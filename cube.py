@@ -22,43 +22,40 @@ import data
 import interface
 
 # cube design
+# not immeditalry written as 1 3d array as easier to do
 
-up = [
-    [WHITE, WHITE, WHITE],
-    [WHITE, WHITE, WHITE],
-    [WHITE, WHITE, WHITE],
-]
-down = [
-    [YELLOW, YELLOW, YELLOW],
-    [YELLOW, YELLOW, YELLOW],
-    [YELLOW, YELLOW, YELLOW],
-]
-
-left = [
+default_cube = [
+    [
     [ORANGE, ORANGE, ORANGE],
     [ORANGE, ORANGE, ORANGE],
     [ORANGE, ORANGE, ORANGE],
-]
-
-right = [
-    [RED, RED, RED],
-    [RED, RED, RED],
-    [RED, RED, RED],
-]
-
-front = [
+    ],
+    [
     [GREEN, GREEN, GREEN],
     [GREEN, GREEN, GREEN],
     [GREEN, GREEN, GREEN],
+    ],
+    [
+    [RED, RED, RED],
+    [RED, RED, RED],
+    [RED, RED, RED],
+    ],
+    [
+    [BLUE, BLUE, BLUE],
+    [BLUE, BLUE, BLUE],
+    [BLUE, BLUE, BLUE],
+    ],
+    [
+    [WHITE, WHITE, WHITE],
+    [WHITE, WHITE, WHITE],
+    [WHITE, WHITE, WHITE],
+    ],
+    [
+    [YELLOW, YELLOW, YELLOW],
+    [YELLOW, YELLOW, YELLOW],
+    [YELLOW, YELLOW, YELLOW],
+    ],
 ]
-
-back = [
-    [BLUE, BLUE, BLUE],
-    [BLUE, BLUE, BLUE],
-    [BLUE, BLUE, BLUE],
-]
-
-default_cube = [left, front, right, back, up, down]
 used_cube = copy.deepcopy(default_cube)
 
 # moves
@@ -127,10 +124,13 @@ class Cube3D:
         self.pos = pos
 
     def update(self):
-        image = self.get_image()
+        image = self.create_image()
         self.screen.blit(image, image.get_rect(center=self.pos))
-        
+
     def get_image(self, default=False):
+        return self.create_image(default)
+        
+    def create_image(self, default=False):
         """Returns the 3d cube, will be centered if blited to 0, 0"""
         surf = pygame.Surface((365, 335))
         surf.fill(default_colour)
@@ -219,17 +219,100 @@ class Cube3D:
         return surf
 
 
-class CubeGuide:
+##class CubeGuide:
+##    def __init__(self, surface, pos):
+##        # pos is centre
+##        self.screen = surface
+##        self.pos = pos
+##
+##    def update(self):
+##        image = self.get_image()
+##        self.screen.blit(image, image.get_rect(center=self.pos))
+##        
+##    def get_image(self):
+##        surf = pygame.Surface((600, 600)) # 600
+##        surf.fill(default_colour)
+##        colour = data.guide_arrow_colour
+##        if default_colour == BLACK:
+##            print("BAD idea, change cube_guide colour first")
+##        #TODO: finnish
+##        def arrow_top(text, angle=0):
+##            surf = pygame.Surface((100, 100))
+##            surf.fill(default_colour)
+##            pygame.draw.polygon(surf, colour, ((13, 13), (50, 0), (63, 63), (50, 50), (50, 93), (25, 80), (25, 25)))
+##            surf.set_colorkey(default_colour)
+##            #angle
+##            surf = pygame.transform.rotate(surf, angle)
+##            # letter
+##            surf.blit(interface.text(text, data.guide_font, BLACK, data.default_colour), (15,0))
+##            return surf
+##        def arrow_right(text, angle=0):
+##            surf = pygame.Surface((100, 100))
+##            surf.fill(default_colour)
+##            pygame.draw.polygon(surf, colour, ((38, 50), (63, 25), (63, 38), (100, 38), (100, 63), (63, 63), (63, 75)))
+##            surf.set_colorkey(default_colour)
+##            # angle
+##            surf = pygame.transform.rotate(surf, angle)
+##            # letter
+##            surf.blit(interface.text(text, data.guide_font, BLACK, data.default_colour), (35,25))
+##            return surf
+##        def arrow_rotate(text, angle=0):
+##            surf = pygame.Surface((200, 100))
+##            surf.fill(default_colour)
+##            pygame.draw.polygon(surf, colour, ((200, 50), (150, 100), (150, 75), (0, 75), (0, 25), (150, 25), (150, 0)))
+##            surf.set_colorkey(default_colour)
+##            # angle
+##            surf = pygame.transform.rotate(surf, angle)
+##            # letter
+##            surf.blit(interface.text(text, data.guide_font, BLACK, data.default_colour), (0, 0))
+##            return surf
+##
+##        cube_offset_x = 100
+##        cube_offset_y = 50
+##        surf.blit(Cube3D.get_image(True), (cube_offset_x, cube_offset_y))
+##
+##        # up
+##        surf.blit(arrow_top("Q"), (cube_offset_x + 30, cube_offset_y + 13))
+##        surf.blit(arrow_top("W"), (cube_offset_x + 90, cube_offset_y + 45))
+##        surf.blit(arrow_top("E"), (cube_offset_x + 150, cube_offset_y + 73))
+##
+##        # left
+##        surf.blit(arrow_right("R"),(cube_offset_x + 100, cube_offset_y + 150))
+##        surf.blit(arrow_right("F"),(cube_offset_x + 100, cube_offset_y + 200))
+##        surf.blit(arrow_right("V"),(cube_offset_x + 100, cube_offset_y + 250))
+##
+##        # right
+##        surf.blit(arrow_right("T", 180), (cube_offset_x + 205, cube_offset_y + 152))
+##        surf.blit(arrow_right("G", 180), (cube_offset_x + 205, cube_offset_y + 202))
+##        surf.blit(arrow_right("B", 180), (cube_offset_x + 205, cube_offset_y + 252))
+##
+##        # down
+##        surf.blit(arrow_top("A", 180), (cube_offset_x, cube_offset_y + 250))
+##        surf.blit(arrow_top("S", 180), (cube_offset_x + 50, cube_offset_y + 277))
+##        surf.blit(arrow_top("D", 180), (cube_offset_x + 100, cube_offset_y + 305))
+##
+##        # rotate
+##        surf.blit(arrow_rotate("X"), (cube_offset_x + 50, cube_offset_y + 400))
+##        surf.blit(arrow_rotate("Y", 90), (cube_offset_x - 100, cube_offset_y + 100))
+##        surf.blit(arrow_rotate("Z", 335), (cube_offset_x + 250, cube_offset_y - 50))
+##        
+##        return surf
+
+class CubeGuide(Cube3D):
     def __init__(self, surface, pos):
         # pos is centre
         self.screen = surface
         self.pos = pos
+        super().__init__(surface, pos)
 
     def update(self):
-        image = self.get_image()
+        image = self.create_updated_image()
         self.screen.blit(image, image.get_rect(center=self.pos))
-        
+
     def get_image(self):
+        return self.create_updated_image()
+        
+    def create_updated_image(self):
         surf = pygame.Surface((600, 600)) # 600
         surf.fill(default_colour)
         colour = data.guide_arrow_colour
@@ -269,7 +352,7 @@ class CubeGuide:
 
         cube_offset_x = 100
         cube_offset_y = 50
-        surf.blit(Cube3D.get_image(True), (cube_offset_x, cube_offset_y))
+        surf.blit(self.create_image(True), (cube_offset_x, cube_offset_y))
 
         # up
         surf.blit(arrow_top("Q"), (cube_offset_x + 30, cube_offset_y + 13))
@@ -297,6 +380,7 @@ class CubeGuide:
         surf.blit(arrow_rotate("Z", 335), (cube_offset_x + 250, cube_offset_y - 50))
         
         return surf
+
 
 
 def turn(row_col, number, backwards=False, ignore_moves=False):
@@ -383,7 +467,7 @@ def rotate(axis, ignore_moves=False):
 
 
 def scramble():
-    for _ in range(1): # randint(15, 25)):
+    for _ in range(randint(15, 25)):
         direction = bool(randint(0, 1))
         number = randint(0, 2)
         backwards = bool(randint(0, 1))
