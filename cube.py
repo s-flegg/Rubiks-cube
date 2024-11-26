@@ -5,16 +5,21 @@ from random import randint
 
 import numpy
 import pygame
+import time
 
-# colours
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-YELLOW = (255, 255, 0)
-ORANGE = (255, 165, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-GREY = (169, 169, 169)
+from data import (
+    default_colour,
+    BLACK,
+    WHITE,
+    YELLOW,
+    ORANGE,
+    RED,
+    GREEN,
+    BLUE,
+    GREY,
+    )
+import data
+import interface
 
 # cube design
 
@@ -59,170 +64,239 @@ used_cube = copy.deepcopy(default_cube)
 # moves
 moves = []
 
+class CubeNet: # more classes (and make update draw things)
+    def __init__(self, surface, pos):
+        # pos is centre
+        self.screen = surface
+        self.pos = pos
 
-def cube_net(default_colour):
-    """
-    blits cube net to screen
-    :param colour_3d_array: cube colour array
-    """
-    surf = pygame.Surface((720, 540))
-    surf.fill(default_colour)
-    colour_3d_array = used_cube
-
-    def square(colour):
-        surf = pygame.Surface((50, 50))
-        surf.fill(colour)
-        return surf
-
-    def row(colour_list):
-        surf = pygame.Surface((170, 50))  # 170, 50
-        surf.fill(default_colour)
-        for i in range(3):
-            surf.blit(square(colour_list[i]), (i * 50 + i * 10, 0))
-        return surf
-
-    def face(colour_array):
-        surf = pygame.Surface((170, 170))
-        surf.fill(default_colour)
-        for i in range(3):
-            surf.blit(row(colour_array[i]), (0, i * 50 + i * 10))
-        return surf
-
-    for i in range(4):
-        surf.blit(
-            face(colour_3d_array[i]),
-            (180 * i, 180)
-            )
-
-        surf.blit(
-            face(colour_3d_array[4]),
-            (180, 0)
-            )
-
-    surf.blit(
-        face(colour_3d_array[5]),
-        (180, 360)
-        )
-    return surf
-
-
-def cube_3d(default_colour, default=False):
-    """Returns the 3d cube, will be centered if blited to 0, 0"""
-    surf = pygame.Surface((365, 335))
-    surf.fill(default_colour)
-    colour_3d_array = used_cube
-    if default:
-        colour_3d_array = default_cube
-
-    def right():  
-        def square(colour):
-            surf = pygame.Surface((50, 75))  
-            surf.fill(default_colour)
-            pygame.draw.polygon(surf, colour, ((0, 25), (50, 0), (50, 50), (0, 75)))
-            return surf
-
-        def row(colour_list):
-            surf = pygame.Surface((165, 135))  
-            surf.fill(default_colour)
-            for i in range(3):
-                surf.blit(square(colour_list[i]), (55 * i, 60 - (30 * i)))
-            surf.set_colorkey(default_colour)
-            return surf
-
-        def face(colour_array):
-            surf = pygame.Surface((165, 250))  
-            surf.fill(default_colour)
-            for i in range(3):
-                surf.blit(row(colour_array[i]), (0, 55 * i))
-            return surf
-
-        surf.blit(face(colour_3d_array[2]), (205, 90))
-
-    def front():
-        def square(colour):
-            surf = pygame.Surface((50, 75))
-            surf.fill(default_colour)
-            pygame.draw.polygon(surf, colour, ((0, 0), (50, 25), (50, 75), (0, 50)))
-            return surf
-
-        def row(colour_list):
-            surf = pygame.Surface((165, 135))
-            surf.fill(default_colour)
-            for i in range(3):
-                surf.blit(square(colour_list[i]), (55 * i, 30 * i))
-            surf.set_colorkey(default_colour)
-            return surf
-
-        def face(colour_array):
-            surf = pygame.Surface((165, 250))
-            surf.fill(default_colour)
-            for i in range(3):
-                surf.blit(row(colour_array[i]), (0, 55 * i))
-            return surf
-
-        surf.blit(face(colour_3d_array[1]), (40, 90))
-
-    def top():
-        def square(colour):
-            surf = pygame.Surface((100, 50))
-            surf.fill(default_colour)
-            pygame.draw.polygon(surf, colour, ((50, 0), (100, 25), (50, 50), (0, 25)))
-            surf.set_colorkey(default_colour)
-            return surf
-
-        def row(colour_list):
-            surf = pygame.Surface((215, 120))
-            surf.fill(default_colour)
-            for i in range(3):
-                surf.blit(square(colour_list[i]), (55 * i, 30 * i))
-            surf.set_colorkey(default_colour)
-            return surf
-
-        def face(colour_array):
-            surf = pygame.Surface((370, 315))
-            surf.fill(default_colour)
-            for i in range(3):
-                surf.blit(row(colour_array[i]), (150 - (55 * i), 30 * i))
-            surf.set_colorkey(default_colour)
-            return surf
-
-        surf.blit(face(colour_3d_array[4]), (0, 0))
-
-    right()
-    front()
-    top()
-
-    return surf
-
-def cube_guide(default_colour):
-    surf = pygame.Surface((500, 500))
-    surf.fill(default_colour)
-    colour_3d_array = used_cube
-    colour = BLACK # bad idea if default_colour is black
-    if default_colour == BLACK:
-        print("BAD idea, change cube_guide colour first")
-    #TODO: finnish
-    def arrow(colour):
-        surf = pygame.Surface((100, 100))
-        surf.fill(default_colour)
-        # pygame.draw.polygon(surf, colour, ((25, 0), (50, 0), (75, 25), (68, 13), (38, 25), (25, 50), (25, 75), (0, 75), (0, 50), (13, 25), (38, 13), (0, 0))) #TODO: arrow
-        # pygame.draw.arc(surf, colour
-        pygame.draw.polygon(surf, colour, ((13, 13), (50, 0), (63, 63), (50, 50), (50, 95), (25, 80), (25, 25)))
-        surf.set_colorkey(default_colour)
-        return surf
-
-    surf.blit(cube_3d(default_colour, True), (50, 50))
-
-    # top
-    surf.blit(arrow(BLACK), (80, 63))
-    surf.blit(arrow(BLACK), (140, 95))
-    surf.blit(arrow(BLACK), (190, 123))
-
-    # right
-    arrow = pygame.transform.rotate(arrow(BLACK), 90)
-    surf.blit(arrow, (200, 200))
+    def update(self):
+        image = self.get_image()
+        self.screen.blit(image, image.get_rect(center=self.pos))
     
-    return surf
+    def get_image(self):
+        """
+        blits cube net to screen
+        :param colour_3d_array: cube colour array
+        """
+        surf = pygame.Surface((720, 540))
+        surf.fill(default_colour)
+        colour_3d_array = used_cube
+
+        def square(colour):
+            surf = pygame.Surface((50, 50))
+            surf.fill(colour)
+            return surf
+
+        def row(colour_list):
+            surf = pygame.Surface((170, 50))  # 170, 50
+            surf.fill(default_colour)
+            for i in range(3):
+                surf.blit(square(colour_list[i]), (i * 50 + i * 10, 0))
+            return surf
+
+        def face(colour_array):
+            surf = pygame.Surface((170, 170))
+            surf.fill(default_colour)
+            for i in range(3):
+                surf.blit(row(colour_array[i]), (0, i * 50 + i * 10))
+            return surf
+
+        for i in range(4):
+            surf.blit(
+                face(colour_3d_array[i]),
+                (180 * i, 180)
+                )
+
+            surf.blit(
+                face(colour_3d_array[4]),
+                (180, 0)
+                )
+
+        surf.blit(
+            face(colour_3d_array[5]),
+            (180, 360)
+            )
+        return surf
+
+
+class Cube3D:
+    def __init__(self, surface, pos):
+        # pos is centre
+        self.screen = surface
+        self.pos = pos
+
+    def update(self):
+        image = self.get_image()
+        self.screen.blit(image, image.get_rect(center=self.pos))
+        
+    def get_image(self, default=False):
+        """Returns the 3d cube, will be centered if blited to 0, 0"""
+        surf = pygame.Surface((365, 335))
+        surf.fill(default_colour)
+        colour_3d_array = used_cube
+        if default:
+            colour_3d_array = default_cube # TODO: check if needed
+
+        def right():  
+            def square(colour):
+                surf = pygame.Surface((50, 75))  
+                surf.fill(default_colour)
+                pygame.draw.polygon(surf, colour, ((0, 25), (50, 0), (50, 50), (0, 75)))
+                return surf
+
+            def row(colour_list):
+                surf = pygame.Surface((165, 135))  
+                surf.fill(default_colour)
+                for i in range(3):
+                    surf.blit(square(colour_list[i]), (55 * i, 60 - (30 * i)))
+                surf.set_colorkey(default_colour)
+                return surf
+
+            def face(colour_array):
+                surf = pygame.Surface((165, 250))  
+                surf.fill(default_colour)
+                for i in range(3):
+                    surf.blit(row(colour_array[i]), (0, 55 * i))
+                return surf
+
+            surf.blit(face(colour_3d_array[2]), (205, 90))
+
+        def front():
+            def square(colour):
+                surf = pygame.Surface((50, 75))
+                surf.fill(default_colour)
+                pygame.draw.polygon(surf, colour, ((0, 0), (50, 25), (50, 75), (0, 50)))
+                return surf
+
+            def row(colour_list):
+                surf = pygame.Surface((165, 135))
+                surf.fill(default_colour)
+                for i in range(3):
+                    surf.blit(square(colour_list[i]), (55 * i, 30 * i))
+                surf.set_colorkey(default_colour)
+                return surf
+
+            def face(colour_array):
+                surf = pygame.Surface((165, 250))
+                surf.fill(default_colour)
+                for i in range(3):
+                    surf.blit(row(colour_array[i]), (0, 55 * i))
+                return surf
+
+            surf.blit(face(colour_3d_array[1]), (40, 90))
+
+        def top():
+            def square(colour):
+                surf = pygame.Surface((100, 50))
+                surf.fill(default_colour)
+                pygame.draw.polygon(surf, colour, ((50, 0), (100, 25), (50, 50), (0, 25)))
+                surf.set_colorkey(default_colour)
+                return surf
+
+            def row(colour_list):
+                surf = pygame.Surface((215, 120))
+                surf.fill(default_colour)
+                for i in range(3):
+                    surf.blit(square(colour_list[i]), (55 * i, 30 * i))
+                surf.set_colorkey(default_colour)
+                return surf
+
+            def face(colour_array):
+                surf = pygame.Surface((370, 315))
+                surf.fill(default_colour)
+                for i in range(3):
+                    surf.blit(row(colour_array[i]), (150 - (55 * i), 30 * i))
+                surf.set_colorkey(default_colour)
+                return surf
+
+            surf.blit(face(colour_3d_array[4]), (0, 0))
+
+        right()
+        front()
+        top()
+
+        return surf
+
+
+class CubeGuide:
+    def __init__(self, surface, pos):
+        # pos is centre
+        self.screen = surface
+        self.pos = pos
+
+    def update(self):
+        image = self.get_image()
+        self.screen.blit(image, image.get_rect(center=self.pos))
+        
+    def get_image(self):
+        surf = pygame.Surface((600, 600)) # 600
+        surf.fill(default_colour)
+        colour = data.guide_arrow_colour
+        if default_colour == BLACK:
+            print("BAD idea, change cube_guide colour first")
+        #TODO: finnish
+        def arrow_top(text, angle=0):
+            surf = pygame.Surface((100, 100))
+            surf.fill(default_colour)
+            pygame.draw.polygon(surf, colour, ((13, 13), (50, 0), (63, 63), (50, 50), (50, 93), (25, 80), (25, 25)))
+            surf.set_colorkey(default_colour)
+            #angle
+            surf = pygame.transform.rotate(surf, angle)
+            # letter
+            surf.blit(interface.text(text, data.guide_font, BLACK, data.default_colour), (15,0))
+            return surf
+        def arrow_right(text, angle=0):
+            surf = pygame.Surface((100, 100))
+            surf.fill(default_colour)
+            pygame.draw.polygon(surf, colour, ((38, 50), (63, 25), (63, 38), (100, 38), (100, 63), (63, 63), (63, 75)))
+            surf.set_colorkey(default_colour)
+            # angle
+            surf = pygame.transform.rotate(surf, angle)
+            # letter
+            surf.blit(interface.text(text, data.guide_font, BLACK, data.default_colour), (35,25))
+            return surf
+        def arrow_rotate(text, angle=0):
+            surf = pygame.Surface((200, 100))
+            surf.fill(default_colour)
+            pygame.draw.polygon(surf, colour, ((200, 50), (150, 100), (150, 75), (0, 75), (0, 25), (150, 25), (150, 0)))
+            surf.set_colorkey(default_colour)
+            # angle
+            surf = pygame.transform.rotate(surf, angle)
+            # letter
+            surf.blit(interface.text(text, data.guide_font, BLACK, data.default_colour), (0, 0))
+            return surf
+
+        cube_offset_x = 100
+        cube_offset_y = 50
+        surf.blit(Cube3D.get_image(True), (cube_offset_x, cube_offset_y))
+
+        # up
+        surf.blit(arrow_top("Q"), (cube_offset_x + 30, cube_offset_y + 13))
+        surf.blit(arrow_top("W"), (cube_offset_x + 90, cube_offset_y + 45))
+        surf.blit(arrow_top("E"), (cube_offset_x + 150, cube_offset_y + 73))
+
+        # left
+        surf.blit(arrow_right("R"),(cube_offset_x + 100, cube_offset_y + 150))
+        surf.blit(arrow_right("F"),(cube_offset_x + 100, cube_offset_y + 200))
+        surf.blit(arrow_right("V"),(cube_offset_x + 100, cube_offset_y + 250))
+
+        # right
+        surf.blit(arrow_right("T", 180), (cube_offset_x + 205, cube_offset_y + 152))
+        surf.blit(arrow_right("G", 180), (cube_offset_x + 205, cube_offset_y + 202))
+        surf.blit(arrow_right("B", 180), (cube_offset_x + 205, cube_offset_y + 252))
+
+        # down
+        surf.blit(arrow_top("A", 180), (cube_offset_x, cube_offset_y + 250))
+        surf.blit(arrow_top("S", 180), (cube_offset_x + 50, cube_offset_y + 277))
+        surf.blit(arrow_top("D", 180), (cube_offset_x + 100, cube_offset_y + 305))
+
+        # rotate
+        surf.blit(arrow_rotate("X"), (cube_offset_x + 50, cube_offset_y + 400))
+        surf.blit(arrow_rotate("Y", 90), (cube_offset_x - 100, cube_offset_y + 100))
+        surf.blit(arrow_rotate("Z", 335), (cube_offset_x + 250, cube_offset_y - 50))
+        
+        return surf
 
 
 def turn(row_col, number, backwards=False, ignore_moves=False):
@@ -309,14 +383,14 @@ def rotate(axis, ignore_moves=False):
 
 
 def scramble():
-    for _ in range(randint(15, 25)):
+    for _ in range(1): # randint(15, 25)):
         direction = bool(randint(0, 1))
         number = randint(0, 2)
         backwards = bool(randint(0, 1))
 
         turn(direction, number, backwards)
 
-
+# ----------------------------------------------------------------- ORIGINAL SOLVER ------------------------------------------------------------------------ #
 class Solver:
     def __init__(self):
         self.first = True
@@ -328,9 +402,6 @@ class Solver:
         """
         # TODO: better comment above
 
-        if self.check_solved():
-            return False
-
         if self.first:
             if len(moves) > 0:
                 self.sleep_time = 5 / len(moves)
@@ -338,19 +409,8 @@ class Solver:
             else:
                 self.sleep_time = 1
 
-        if len(moves) != 0:
-            move = moves.pop()
-            if "rotation" in move.keys():
-                for _ in range(3):
-                    rotate(move["direction"], ignore_moves=True)
-            else:
-                turn(move["direction"], move["number"], not move["backwards"], True)
-            if len(moves) == 0:
-                return False
-            else:
-                return True # comtinue solving
-        else:
-            return False
+        return self.pop_move()
+        
 
     def check_solved(self):
         not_solved = False
@@ -362,5 +422,110 @@ class Solver:
                         not_solved = True
         return not not_solved
 
+    def pop_move(self):
+        if self.check_solved():
+            return False
+        
+        if len(moves) != 0:
+            move = moves.pop()
+            if "rotatiopn" in move.keys():
+                for _ in range(3):
+                    rotate(move["direction"], ignore_moves=True)
+            else:
+                turn(move["direction"], move["number"], not move["backwards"], True)
+            if len(moves) == 0:
+                return False
+            else:
+                return True # comtinue solving
+        else:
+            return False
+# ------------------------------------------------F2L SOLVER------------------------------------------------------------------------------------------------------- #
+
+##class Solver:
+##    def __init__(self):
+##        self.y = True
+##        self.sleep_time = 0.2
+
+##    def solve(self):
+##        """
+##        call each game loop until it returns false, it does one move per call
+##        :return: bool
+##        """
+##        # use of algos from: https://solvethecube.com/algorithms
+##
+##        def f2l():
+##            # algos require top centre be yellow,
+##            # front centre be blue and right centre be red
+##            if not (
+##                # numpy.all is needed due to issues comparing arrays,
+##                # all is used to ensure a full rgb match
+##                numpy.all(used_cube[4][1][1] == YELLOW)
+##                and numpy.all(used_cube[1][1][1] == BLUE)
+##                and numpy.all(used_cube[2][1][1] == RED)
+##            ):
+##                if not numpy.all(used_cube[4][1][1] == YELLOW):
+##                    if self.y:  # this will eventually always place yellow at the top
+##                        rotate("y")
+##                    else:
+##                        rotate("z")
+##                    self.y = not self.y
+##                    return True
+##                if not (
+##                    numpy.all(used_cube[1][1][1] == BLUE)
+##                    and numpy.all(used_cube[2][1][1] == RED)
+##                ):
+##                    rotate("x") # place blue at the front
+##                    return True
+##
+##            #if (
+##            #    numpy.all(used_cube[4][1][1] == YELLOW)
+##            #    and numpy.all(used_cube[1][1][1] == BLUE)
+##            #    and numpy.all(used_cube[2][1][1] == RED)
+##            #):
+##                # add cases
+##            # basic cases
+##
+##            # R U R'
+##            if (
+##
+##        return f2l()
+# -------------------------------------------------------------------------------------------------
+
+
+class Timer:
+    def __init__(self):
+        self.start_time = 0
+        self.end = 0
+        self.elapsed = 0
+        self.exists = False
+        self.running = False
+
+    def start(self):
+        self.exists = True
+        self.running = True
+        self.start_time = time.time()
+
+    def stop(self):
+        self.update()
+        self.running = False
+
+    def delete(self):
+        self.exists = False
+        
+    def update(self):
+        if self.running:
+            self.end = time.time()
+            self.elapsed = self.end - self.start_time
+
+    def display_elapsed(self):
+        if not self.exists: # checks if tmier has ever run
+            return data.empty_image
+        secs = 60 # amount of seconds before swapping to minute display, must be interval of 60
+        if self.elapsed < secs:
+            image = interface.text(str(round(self.elapsed, 3)) + " seconds", data.default_font, BLACK, default_colour) # pygame cannot render \n
+        else:
+            image = interface.text(str(int(self.elapsed/secs)) + "m " + str(int(self.elapsed % secs)) + "s ", data.default_font, BLACK, default_colour)
+
+        return image
 
 

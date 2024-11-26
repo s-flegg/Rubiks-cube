@@ -5,19 +5,7 @@ import time
 
 import interface 
 import cube
-
-
-# colours
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-YELLOW = (255, 255, 0)
-ORANGE = (255, 165, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-GREY = (169, 169, 169)
-
-default_colour = GREY
+from data import *
 
 
 # window
@@ -26,11 +14,15 @@ width = 1600
 height = 900
 screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
+# cubes
+cube_net = cube.CubeNet(screen, (width//2, height//2))
+cube_3d = cube.Cube3D(screen, (width//2, height//2))
+cube_guide = cube.CubeGuide(screen, (width//2, height//2))
 
 class RenderButtons:
-    cube_option = interface.DisplayOption(lambda: cube.cube_3d(default_colour), screen, [10, 0], [100, 100], 1.5, lambda: RenderButtons.display_swap("3d"), default_colour)
-    net_option = interface.DisplayOption(lambda: cube.cube_net(default_colour), screen, [10, 100], [100, 100], 1.5, lambda: RenderButtons.display_swap("net"), default_colour)
-    guide_option = interface.DisplayOption(lambda: cube.cube_guide(default_colour), screen, [10, 200], [100, 100], 1.5, lambda: RenderButtons.display_swap("guide"), default_colour)
+    cube_option = interface.DisplayOption(lambda: cube_3d.get_image(), screen, [10, 0], [100, 100], 1.5, lambda: RenderButtons.display_swap("3d"), default_colour)
+    net_option = interface.DisplayOption(lambda: cube_net.get_image(), screen, [10, 100], [100, 100], 1.5, lambda: RenderButtons.display_swap("net"), default_colour)
+    guide_option = interface.DisplayOption(lambda: cube_guide.get_image(), screen, [10, 200], [100, 100], 1.5, lambda: RenderButtons.display_swap("guide"), BLACK) # should be default colour, but bg gets changed to bacl somewhere. MAy be an error with pygame.smoothscale in interface file
     cube_option_bar = interface.DisplayBar([cube_option, net_option, guide_option], [0, 50]) # update with any new options
     display_option = "3d"
  # TODO: cube_guide doesnt move when cube is hovered
@@ -38,8 +30,10 @@ class RenderButtons:
         RenderButtons.display_option = option
 
 
+
 solve_cube = False
 solver = cube.Solver()
+timer = cube.Timer()
 
 # game loop
 while True:
@@ -87,8 +81,13 @@ while True:
 
             elif event.key == pygame.K_k:
                 solve_cube = True
+                if timer.running: # decreased perfromance signoificantly TODO: fix?
+                    timer.delete()
             elif event.key == pygame.K_m:
                 cube.scramble()
+                timer.start()# start timer
+            elif event.key == pygame.K_h:
+                solver.pop_move()
 
     screen.fill(default_colour)
 
@@ -98,16 +97,27 @@ while True:
     else:
         solver.first = True
 
+    if timer.running and solver.check_solved():
+        timer.stop()
+
     if RenderButtons.display_option == "3d":
-        surf = cube.cube_3d(default_colour)
+        display_cube = cube_3d
     elif RenderButtons.display_option == "net":
-        surf = cube.cube_net(default_colour)
+        display_cube = cube_net
     elif RenderButtons.display_option == "guide":
         # also prevents cube interact as uses default
-        surf = cube.cube_guide(default_colour)
-    rect = surf.get_rect(center=(width//2, height//2))
-    screen.blit(surf, rect)
+        display_cube = cube_guide
+        # actions text
+        screen.blit(interface.text("Scramble: M", guide_font, BLACK, default_colour), (1100, 300))
+        screen.blit(interface.text("Solve: K", guide_font, BLACK, default_colour), (1100, 350))
+        screen.blit(interface.text("Hint: H", guide_font, BLACK, default_colour), (1100, 400))
+    display_cube.update()
+
+    if timer.exists:
+        screen.blit(timer.display_elapsed(), (1400, 200))
+        timer.update()
     
     RenderButtons.cube_option_bar.update(mouse_pos, mouse_up)
 
     pygame.display.flip()
+pygame.quit()

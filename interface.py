@@ -1,5 +1,5 @@
 import pygame
-
+from pygame import freetype
 
 class DisplayOption():
     def __init__(self, image_function, display_surf, pos, size, mult, action, bg_col):
@@ -77,6 +77,10 @@ def text(text, font, foreground_colour, background_colour):
     :type foreground_colour: tuple
     :type background_colour: tuple
     """
-    surface = self.font.render(text=text, fgcolor=foreground_colour, bgcolor=background_colour)
+    surface, _ = font.render(text=text, fgcolor=foreground_colour, bgcolor=background_colour)
     image = surface.convert_alpha() # optimisation
     return image
+
+
+        
+        
