@@ -8,9 +8,7 @@ import pygame
 import time
 
 from data import (
-    default_colour,
-    BLACK,
-    WHITE,
+    default_colour,BLACK,WHITE,
     YELLOW,
     ORANGE,
     RED,
@@ -583,16 +581,13 @@ class Timer:
         self.elapsed = 0
         self.exists = False
         self.running = False
-
     def start(self):
         self.exists = True
         self.running = True
         self.start_time = time.time()
-
     def stop(self):
         self.update()
         self.running = False
-
     def delete(self):
         self.exists = False
         
@@ -611,5 +606,3 @@ class Timer:
             image = interface.text(str(int(self.elapsed/secs)) + "m " + str(int(self.elapsed % secs)) + "s ", data.default_font, BLACK, default_colour)
 
         return image
-
-
