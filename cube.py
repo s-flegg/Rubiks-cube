@@ -1,75 +1,19 @@
 """
-This file contains the code for the cube as well as game features that reference the cube
+This file contains the code for the cube as well as the turn and rotation functions
 
-This file handles all the data to do with the cube: its state, moves made, etc.
-It also handles features that make use of the cube such as the solver and timer.
+This file handles creating the images to display the cube
+and the basic turn and rotation functions for interacting with the cube
 
 black, isort and flake8 used for formatting
 """
 
 import copy
-import time
-from random import randint
 
-import data
+import game_data as gd
 import interface
 import numpy
 import pygame
-
-# colours
-from data import BLACK, BLUE, GREEN, GREY, ORANGE, RED, WHITE, YELLOW, default_colour
-
-# cube design
-# split into sides as easier to write
-up = [
-    [WHITE, WHITE, WHITE],
-    [WHITE, WHITE, WHITE],
-    [WHITE, WHITE, WHITE],
-]
-down = [
-    [YELLOW, YELLOW, YELLOW],
-    [YELLOW, YELLOW, YELLOW],
-    [YELLOW, YELLOW, YELLOW],
-]
-
-left = [
-    [ORANGE, ORANGE, ORANGE],
-    [ORANGE, ORANGE, ORANGE],
-    [ORANGE, ORANGE, ORANGE],
-]
-
-right = [
-    [RED, RED, RED],
-    [RED, RED, RED],
-    [RED, RED, RED],
-]
-
-front = [
-    [GREEN, GREEN, GREEN],
-    [GREEN, GREEN, GREEN],
-    [GREEN, GREEN, GREEN],
-]
-
-back = [
-    [BLUE, BLUE, BLUE],
-    [BLUE, BLUE, BLUE],
-    [BLUE, BLUE, BLUE],
-]
-
-# so a default cube may always be shown and to check against for solves
-default_cube = [
-    left,
-    front,
-    right,
-    back,
-    up,
-    down,
-]
-# deepcopy passes by value, not reference, ensuring default_cube is not changed
-used_cube = copy.deepcopy(default_cube)
-
-# used for tracking moves and 'solving' the cube
-moves = []
+from game_data import BLACK, default_colour, default_cube
 
 
 class CubeNet:
@@ -107,7 +51,7 @@ class CubeNet:
         """
         surf = pygame.Surface((720, 540))
         surf.fill(default_colour)
-        colour_3d_array = used_cube
+        colour_3d_array = gd.used_cube
         if default:
             colour_3d_array = default_cube
 
@@ -201,7 +145,7 @@ class Cube3D(CubeNet):
         """
         surf = pygame.Surface((365, 335))
         surf.fill(default_colour)
-        colour_3d_array = used_cube
+        colour_3d_array = gd.used_cube
         if default:
             colour_3d_array = default_cube
 
@@ -411,7 +355,7 @@ class CubeGuide(Cube3D):
         """
         surf = pygame.Surface((600, 600))
         surf.fill(default_colour)
-        colour = data.guide_arrow_colour
+        colour = gd.guide_arrow_colour
         if default_colour == colour:
             # arrows will blend into background
             print("BAD idea, change guide arrow colour first")
@@ -441,9 +385,9 @@ class CubeGuide(Cube3D):
             surf.blit(
                 interface.text(
                     text=text,
-                    font=data.guide_font,
+                    font=gd.guide_font,
                     foreground_colour=BLACK,
-                    background_colour=data.default_colour,
+                    background_colour=gd.default_colour,
                 ),
                 (15, 0),
             )
@@ -482,9 +426,9 @@ class CubeGuide(Cube3D):
             surf.blit(
                 interface.text(
                     text=text,
-                    font=data.guide_font,
+                    font=gd.guide_font,
                     foreground_colour=BLACK,
-                    background_colour=data.default_colour,
+                    background_colour=gd.default_colour,
                 ),
                 (35, 25),
             )
@@ -492,7 +436,7 @@ class CubeGuide(Cube3D):
 
         def arrow_rotate(text, angle=0):
             """
-            Draws a large stright arrow
+            Draws a large straight arrow
 
             :param text: text to draw above the arrow
             :param angle: clockwise angle to rotate the arrow, 0 is right
@@ -523,9 +467,9 @@ class CubeGuide(Cube3D):
             surf.blit(
                 interface.text(
                     text=text,
-                    font=data.guide_font,
+                    font=gd.guide_font,
                     foreground_colour=BLACK,
-                    background_colour=data.default_colour,
+                    background_colour=gd.default_colour,
                 ),
                 (0, 0),
             )
@@ -585,7 +529,10 @@ def turn(row_col, number, backwards=False, ignore_moves=False):
     if not ignore_moves:
         # add the move to the moves list
         # ignoring is useful for solving
-        moves.append({"direction": row_col, "number": number, "backwards": backwards})
+        gd.moves.push({"direction": row_col, "number": number, "backwards": backwards})
+        gd.move_count += 1
+    else:
+        gd.move_count -= 1
 
     # loop to turn the row or column the correct number of times
     loop = 1
@@ -596,39 +543,52 @@ def turn(row_col, number, backwards=False, ignore_moves=False):
         # make copies of the faces of the cube so the original state isn't lost
         # deepcopy prevents pass by reference shenanigans
         # by copying the value instead of creating a reference
-        face0 = copy.deepcopy(used_cube[0])
-        face1 = copy.deepcopy(used_cube[1])
-        face2 = copy.deepcopy(used_cube[2])
-        face3 = copy.deepcopy(used_cube[3])
-        face4 = copy.deepcopy(used_cube[4])
-        face5 = copy.deepcopy(used_cube[5])
+        face0 = copy.deepcopy(gd.used_cube[0])
+        face1 = copy.deepcopy(gd.used_cube[1])
+        face2 = copy.deepcopy(gd.used_cube[2])
+        face3 = copy.deepcopy(gd.used_cube[3])
+        face4 = copy.deepcopy(gd.used_cube[4])
+        face5 = copy.deepcopy(gd.used_cube[5])
 
         n = number
 
         if row_col:  # turn the row
-            used_cube[2][n], used_cube[3][n], used_cube[0][n], used_cube[1][n] = (
+            (
+                gd.used_cube[2][n],
+                gd.used_cube[3][n],
+                gd.used_cube[0][n],
+                gd.used_cube[1][n],
+            ) = (
                 face1[n],
                 face2[n],
                 face3[n],
                 face0[n],
             )
             if number == 0:  # rotate the top face
-                used_cube[4] = numpy.rot90(used_cube[4], k=1, axes=(0, 1))
+                gd.used_cube[4] = numpy.rot90(
+                    gd.used_cube[4], k=1, axes=(0, 1)
+                ).tolist()
             elif number == 2:  # rotate the bottom face
-                used_cube[5] = numpy.rot90(used_cube[5], k=1, axes=(1, 0))
+                gd.used_cube[5] = numpy.rot90(
+                    gd.used_cube[5], k=1, axes=(1, 0)
+                ).tolist()
         else:  # turn the column
             for i in range(3):
-                used_cube[1][i][n] = face5[i][n]
+                gd.used_cube[1][i][n] = face5[i][n]
                 # 2-i flips the row number for the back
                 # 2 - n flips the column number for the back
-                used_cube[5][2 - i][n] = face3[i][2 - n]
-                used_cube[3][2 - i][2 - n] = face4[i][n]
-                used_cube[4][i][n] = face1[i][n]
+                gd.used_cube[5][2 - i][n] = face3[i][2 - n]
+                gd.used_cube[3][2 - i][2 - n] = face4[i][n]
+                gd.used_cube[4][i][n] = face1[i][n]
 
             if number == 0:  # rotate left face
-                used_cube[0] = numpy.rot90(used_cube[0], k=1, axes=(0, 1))
+                gd.used_cube[0] = numpy.rot90(
+                    gd.used_cube[0], k=1, axes=(0, 1)
+                ).tolist()
             elif number == 2:  # rotate right face
-                used_cube[2] = numpy.rot90(used_cube[2], k=1, axes=(1, 0))
+                gd.used_cube[2] = numpy.rot90(
+                    gd.used_cube[2], k=1, axes=(1, 0)
+                ).tolist()
 
 
 def rotate(axis, ignore_moves=False):
@@ -644,17 +604,20 @@ def rotate(axis, ignore_moves=False):
     # make copies of the faces of the cube so the original state isn't lost
     # deepcopy prevents pass by reference shenanigans
     # by copying the value instead of creating a reference
-    face0 = copy.deepcopy(used_cube[0])
-    face1 = copy.deepcopy(used_cube[1])
-    face2 = copy.deepcopy(used_cube[2])
-    face3 = copy.deepcopy(used_cube[2])
-    face3 = copy.deepcopy(used_cube[3])
-    face4 = copy.deepcopy(used_cube[4])
-    face5 = copy.deepcopy(used_cube[5])
+    face0 = copy.deepcopy(gd.used_cube[0])
+    face1 = copy.deepcopy(gd.used_cube[1])
+    face2 = copy.deepcopy(gd.used_cube[2])
+    face3 = copy.deepcopy(gd.used_cube[2])
+    face3 = copy.deepcopy(gd.used_cube[3])
+    face4 = copy.deepcopy(gd.used_cube[4])
+    face5 = copy.deepcopy(gd.used_cube[5])
 
     if not ignore_moves:  # add the move to the moves list
         # ignoring is useful for solving
-        moves.append({"rotation": True, "direction": axis})
+        gd.moves.push({"rotation": True, "direction": axis})
+        gd.move_count += 1
+    else:
+        gd.move_count -= 1
 
     if axis == "x":
         for i in range(3):  # equivalent to a rotation along the x axis
@@ -664,193 +627,14 @@ def rotate(axis, ignore_moves=False):
             turn(False, i, ignore_moves=True)
     elif axis == "z":  # equivalent to a rotation along the z axis
         # rotate the front and back faces
-        used_cube[1] = numpy.rot90(used_cube[1], k=1, axes=(1, 0))
-        used_cube[3] = numpy.rot90(used_cube[3], k=1, axes=(0, 1))
+        gd.used_cube[1] = numpy.rot90(gd.used_cube[1], k=1, axes=(1, 0)).tolist()
+        gd.used_cube[3] = numpy.rot90(gd.used_cube[3], k=1, axes=(0, 1)).tolist()
 
         # required a lot of manual testing
         # carefully test any changes
         for j in range(3):
             for i in range(3):
-                used_cube[0][j][2 - i] = face5[i][j]
-                used_cube[4][j][2 - i] = face0[i][j]
-                used_cube[2][j][2 - i] = face4[i][j]
-                used_cube[5][j][2 - i] = face2[i][j]
-
-
-def scramble():
-    """
-    Randomly scrambles the cube by making between 15 and 25 moves randomly
-
-    :rtype: None
-    """
-    for _ in range(randint(15, 25)):
-        # randomise every aspect of the turn
-        direction = bool(randint(0, 1))
-        number = randint(0, 2)
-        backwards = bool(randint(0, 1))
-
-        turn(direction, number, backwards)
-
-
-class Solver:
-    """
-    Solve the cube, one turn per game loop
-
-    The solve function must be called once per game loop
-    until it returns False
-    to completely solve the cube
-
-    The attribute first should be updated to True before each complete solve
-
-    A solve can optionally be made to take 5 seconds. To do this, implement a
-    time.sleep(this_object.sleep_time) before the this_object.solve() call
-    """
-
-    def __init__(self):
-        self.first = True
-        """If it is the first move of the solve
-        :type: bool"""
-        self.sleep_time = 0.2
-        """The amount of time to wait between each move
-        :type: float"""
-
-    def solve(self):
-        """
-        Does the reverse of the last done move and removes it from the moves list
-
-        :return: False if the cube is solved, True otherwise
-        :rtype: bool
-        """
-        # guard clause
-        if len(moves) == 0 or self.check_solved():
-            return False
-
-        # calculate time to wait between move
-        if self.first:
-            if len(moves) > 0:
-                # every solve should take 5 seconds regardless of moves required,
-                # although this can be affected by hardware limitations
-                self.sleep_time = 5 / len(moves)
-                self.first = False
-            else:
-                # wait upon every button press so the user knows it has 'worked'
-                # even when the cube is already solved
-                self.sleep_time = 1
-
-        return self.pop_move()
-
-    def check_solved(self):
-        """
-        Checks whether the cube is in a solved state
-
-        :return: True if the cube is solved, False otherwise
-        :rtype: bool
-        """
-        not_solved = False
-        for i in range(6):  # face
-            for j in range(3):  # row
-                for k in range(3):  # column
-                    # checks for any square not the same colour
-                    # as the middle square on the same face
-                    # numpy.all handles it being a tuple comparison
-                    if not numpy.all(used_cube[i][j][k] == used_cube[i][1][1]):
-                        not_solved = True
-        return not not_solved
-
-    @staticmethod
-    def pop_move():
-        """
-        Removes a move from the moves list and does the reverse
-
-        :return: False if the cube is solved, True otherwise
-        :rtype: bool
-        """
-        # guard clause
-        if len(moves) == 0:
-            return False
-
-        move = moves.pop()  # get the move dictionary
-        if "rotation" in move.keys():  # check if the move was a rotation
-            # rotate does not have a backwards parameter,
-            # so achieve via 3 'forward' turns
-            for _ in range(3):
-                # ignore move as it is part of the solve, not the user or scramble
-                rotate(move["direction"], ignore_moves=True)
-        else:  # if not rotation must be turn
-            # not move["backwards"] to always undo the move
-            # ignore move as part of solve
-            turn(move["direction"], move["number"], not move["backwards"], True)
-        if len(moves) == 0:  # must be solved
-            return False
-        else:
-            return True  # continue solving
-
-
-class Timer:
-    """This class handles timing how long it takes the user to complete a solve"""
-
-    def __init__(self):
-        self.start_time = 0.0
-        """The time since epoch that the timer was started
-        :type: float"""
-        self.end = 0.0
-        """The time since epoch that the timer was stopped
-        :type: float"""
-        self.elapsed = 0.0
-        """The amount of time that has elapsed since the timer was started
-        :type: float"""
-        self.exists = False
-        """Whether the timer has ever been started for this solve
-        :type: bool"""
-        self.running = False
-        """Whether the timer is actively running
-        :type: bool"""
-
-    def start(self):
-        """Starts the timer and marks it as running"""
-        self.exists = True
-        self.running = True
-        self.start_time = time.time()
-
-    def stop(self):
-        """Gets the final time elapsed and stops the timer"""
-        self.update()
-        self.running = False
-
-    def delete(self):
-        """Marks the timer as not having run for the current solve"""
-        self.exists = False
-
-    def update(self):
-        """Updates the time elapsed if the timer is running"""
-        if self.running:
-            self.end = time.time()
-            self.elapsed = self.end - self.start_time
-
-    def display_elapsed(self):
-        """
-        Creates a text image displaying the time elapsed
-
-        :return: The text image
-        :rtype: pygame.Surface
-        """
-        # if time is less than a minute
-        if self.elapsed < 60:  # display time as seconds and milliseconds
-            image = interface.text(
-                str(round(self.elapsed, 3)) + " seconds",  # round to milliseconds
-                data.default_font,
-                BLACK,
-                default_colour,
-            )
-        else:  # display time as minutes and seconds
-            image = interface.text(
-                str(int(self.elapsed / 60))  # minutes
-                + "m "
-                + str(int(self.elapsed % 60))  # seconds
-                + "s ",
-                data.default_font,
-                BLACK,
-                default_colour,
-            )
-
-        return image
+                gd.used_cube[0][j][2 - i] = face5[i][j]
+                gd.used_cube[4][j][2 - i] = face0[i][j]
+                gd.used_cube[2][j][2 - i] = face4[i][j]
+                gd.used_cube[5][j][2 - i] = face2[i][j]
