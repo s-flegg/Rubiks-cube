@@ -7,12 +7,17 @@ files and displays them. It also handles user input within the game loop.
 black, isort and flake8 used for formatting
 """
 
+import sys
 import time
 
 import cube
+import features
+import game_data  # for changing variables in data file
 import interface
 import pygame
-from data import *
+import user_data
+from game_data import *
+from Login import login_window
 from validation import ValidateScreenPositions
 
 # window
@@ -20,14 +25,17 @@ pygame.init()
 width = 1600
 height = 900
 screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+pygame.display.set_caption("Rubik's Cube")
 
 # validation
 val = ValidateScreenPositions(width, height)
 
-# cubes
+# cubes and visuals
 cube_net = cube.CubeNet(screen, val.run((width // 2, height // 2)))
 cube_3d = cube.Cube3D(screen, val.run((width // 2, height // 2)))
 cube_guide = cube.CubeGuide(screen, val.run((width // 2, height // 2)))
+display_history = features.DisplayHistory(screen, val.run((width // 2, height // 2)))
+display_leaderboard = features.Leaderboard(screen, val.run((width // 2, height // 2)))
 
 
 class Buttons:
@@ -68,8 +76,40 @@ class Buttons:
     # but this causes the background of the hovered button to be black.
     # May be an error with pygame.smoothscale in interface file
     # this works as a solution
+
+    history_option = interface.DisplayOption(
+        lambda: interface.text(
+            "HISTORY",
+            default_font,
+            BLACK,
+            default_colour
+        ),
+        screen,
+        val.run([10, 300]),
+        [100, 25],
+        1.5,
+        lambda: Buttons.display_swap("history"),
+        BLACK,  # same problem as guide
+    )
+
+    leaderboard_option = interface.DisplayOption(
+        lambda: interface.text(
+            "LEADERBOARD",
+            default_font,
+            BLACK,
+            default_colour
+        ),
+        screen,
+        val.run([10, 325]),
+        [100, 25],
+        1.5,
+        lambda: Buttons.display_swap("leaderboard"),
+        BLACK,  # same problem as guide
+    )
+
     cube_option_bar = interface.DisplayBar(  # update with any new options
-        [cube_option, net_option, guide_option], False
+        [cube_option, net_option, guide_option, history_option, leaderboard_option],
+        False,
     )
     display_option = "3d"
 
@@ -81,7 +121,7 @@ class Buttons:
         This provides a function for interface.DisplayOption objects
         to update the display_option variable which is saved with this class
 
-        :param option: the new display_option: 3d, net or guide
+        :param option: the new display_option: 3d, net, guide, history or leaderboard
         :type option: str
         """
         Buttons.display_option = option
@@ -102,9 +142,43 @@ class Buttons:
 
 # used for solving the cube
 solve_cube = False
-solver = cube.Solver()
+"""If the cube is being solved
+:type solve_cube: bool"""
+solver = features.Solver()
 
-timer = cube.Timer()
+timer = features.Timer()
+last_save = time.time()
+"""The timestamp of the last save, used for calculating time since last save
+:type last_save: float"""
+
+
+# login
+def load(username):
+    """Desgined to be called by the login window, this function will load the users data
+
+    Uses Manager.load to load the users data and then checks the game state, updating
+    details about the timer and solver is nessesary
+
+    :param username: the unique username of the user
+    :type username: str
+    """
+    user_data.Manager.load(username)
+
+    if game_data.time_taken > 0:  # timer is running
+        # manually start timer to avoid changing start time
+        timer.exists = True
+        timer.running = True
+        timer.start_time = (
+            time.time() - game_data.time_taken
+        )  # act as if timer has just started
+    if game_data.solver_used: # solver is runnning
+        # finish solving cube
+        solver.first = False
+        solve_cube = True
+
+
+login_window.Window(lambda u: load(u))
+
 
 # game loop
 while True:
@@ -115,8 +189,11 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
+            sys.exit()
         elif event.type == pygame.MOUSEBUTTONUP:
             mouse_up = True
+        elif event.type == pygame.MOUSEWHEEL and Buttons.display_option == "history":
+            display_history.scroll(event.y * 25)
         # prevent any moves made whilst on guide cube
         elif event.type == pygame.KEYDOWN and Buttons.display_option != "guide":
             # row right
@@ -158,16 +235,36 @@ while True:
                 cube.rotate("z")
 
             elif event.key == pygame.K_k:  # solve
-                solve_cube = True
-                if timer.running:
+                game_data.solver_used = True
+                if timer.running:  # ensures the attempt was started
+                    # failed attempts should be recorded
+                    game_data.solved = False
+                    user_data.game_history.add_game()
                     timer.delete()
+
+                solve_cube = True
             elif event.key == pygame.K_m:  # scramble
-                cube.scramble()
+                if timer.running:  # ensures the attempt was started
+                    # failed attempts should be recorded
+                    user_data.game_history.add_game()
+
+                # reset key data
+                game_data.moves.clear()
+                game_data.move_count = 0
+                game_data.scrambler_count = 0
+                game_data.hints_used = False
+                game_data.solver_used = False
+                game_data.solved = False
+                game_data.time_taken = 0
+                game_data.start_time = time.time()
+
+                features.scramble()
                 # prevent the timer from being started whilst the solver runs
                 # was achieved by scrambling whilst the timer ran
                 solve_cube = False
                 timer.start()  # start timer
             elif event.key == pygame.K_h:  # hint
+                game_data.hints_used = True
                 solver.pop_move()
 
     screen.fill(default_colour)  # background colour
@@ -179,8 +276,14 @@ while True:
     else:
         solver.first = True  # so next solve it is set to true
 
-    if timer.running and solver.check_solved():  # ends timer on solve
+    if timer.running and solver.check_solved():  # on a solve
         timer.stop()
+        game_data.solved = True
+        user_data.game_history.add_game()
+        display_leaderboard.update_list(
+            game_data.time_taken,
+            game_data.move_count
+        )
 
     if Buttons.display_option == "3d":
         display_cube = cube_3d
@@ -217,6 +320,10 @@ while True:
             ),
             val.run((1100, 400)),
         )
+    elif Buttons.display_option == "history":
+        display_cube = display_history
+    elif Buttons.display_option == "leaderboard":
+        display_cube = display_leaderboard
     display_cube.update()  # actually update cube
 
     if timer.exists:  # display timer
@@ -226,5 +333,9 @@ while True:
     # update buttons
     Buttons.update(mouse_pos, mouse_up)
 
+    # save every 5 seconds
+    if time.time() - last_save > 5:
+        time_since_save = time.time()
+        user_data.Manager.save()
+
     pygame.display.flip()
-pygame.quit()
