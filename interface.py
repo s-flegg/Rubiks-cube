@@ -34,7 +34,7 @@ class DisplayOption:
         :type size: list[int]
         :type mult: float
         :type action: function
-        :type bg_col: tuple[int, int, int]
+        :type bg_col: tuple[int, int, int] or list[int]
         """
         self.image_function = image_function
         self.display_surf = display_surf
@@ -70,9 +70,9 @@ class DisplayOption:
 
         :param mouse_pos: the x,y position of the mouse
         :param offset: the width and height to offset the button ensures its enlarged
-        size does not overlap anything
+            size does not overlap anything
         :param mouse_up: whether the mouse button has been clicked
-        :type mouse_pos: tuple[int, int]
+        :type mouse_pos: tuple[int, int] or list[int]
         :type offset: list[int]
         :type mouse_up: bool
         :return: whether the button is hovered
@@ -162,8 +162,8 @@ def text(text, font, foreground_colour, background_colour):
     :param background_colour: the RGB value of the background colour
     :type text: str
     :type font: pygame.freetype.Font
-    :type foreground_colour: tuple
-    :type background_colour: tuple
+    :type foreground_colour: tuple[int, int, int] or list[int]
+    :type background_colour: tuple[int, int, int] or list[int]
     :return: the image of the text
     :rtype: pygame.Surface
     """
